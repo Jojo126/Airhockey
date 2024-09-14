@@ -1,13 +1,17 @@
-import Matter, { Vector, World } from "matter-js";
+import Matter, { Body, Vector, World } from "matter-js";
+
+const w = window.innerWidth;
+const h = window.innerHeight;
+const inset = 30;
 
 // Module aliases
 const Engine = Matter.Engine,
-    Render = Matter.Render,
-    Runner = Matter.Runner,
-    Bodies = Matter.Bodies,
-    Composite = Matter.Composite,
-    Constraint = Matter.Constraint,
-    Events = Matter.Events;
+  Render = Matter.Render,
+  Runner = Matter.Runner,
+  Bodies = Matter.Bodies,
+  Composite = Matter.Composite,
+  Constraint = Matter.Constraint,
+  Events = Matter.Events;
 
 // Create an engine
 const engine = Engine.create();
@@ -15,24 +19,30 @@ engine.gravity.y = 0;
 
 // Create a renderer
 const render = Render.create({
-    element: document.body,
-    engine: engine,
-    options: {
-      width: window.innerWidth,
-      height: window.innerHeight
-    }
+  element: document.body,
+  engine: engine,
+  options: {
+    width: w,
+    height: h
+  }
 });
 
-// Create two boxes and a ground
-const puck = Bodies.circle(window.innerWidth / 2 - 40, window.innerHeight / 2 - 40, 40, {restitution: 1});
-const leftWall = Bodies.rectangle(0, window.innerHeight / 2, 60, window.innerHeight, { isStatic: true, restitution: 1 });
-const rightWall = Bodies.rectangle(window.innerWidth, window.innerHeight / 2, 60, window.innerHeight, { isStatic: true, restitution: 1 });
-const bottomWall = Bodies.rectangle(window.innerWidth / 2, window.innerHeight, window.innerWidth, 60, { isStatic: true, restitution: 1 });
-const topWall = Bodies.rectangle(window.innerWidth / 2, 0, window.innerWidth, 60, { isStatic: true, restitution: 1 });
+// Create walls (bounds)
+const leftTopHalfWall     = Bodies.rectangle(   -w / 2 + inset,             h / 6, w, h / 3, { isStatic: true, restitution: 1 });
+const rightTopHalfWall    = Bodies.rectangle(3 * w / 2 - inset,             h / 6, w, h / 3, { isStatic: true, restitution: 1 });
+const leftBottomHalfWall  = Bodies.rectangle(   -w / 2 + inset, 2 * h / 3 + h / 6, w, h / 3, { isStatic: true, restitution: 1 });
+const rightBottomHalfWall = Bodies.rectangle(3 * w / 2 - inset, 2 * h / 3 + h / 6, w, h / 3, { isStatic: true, restitution: 1 });
+
+const topWall     = Bodies.rectangle(w / 2,    -h / 2 + inset, w, h, { isStatic: true, restitution: 1 });
+const bottomWall  = Bodies.rectangle(w / 2, 3 * h / 2 - inset, w, h, { isStatic: true, restitution: 1 });
 
 // Goals
-const leftGoal = Bodies.rectangle(60, window.innerHeight / 2, 60, window.innerHeight / 2, { isStatic: true, restitution: 0 });
-const rightGoal = Bodies.rectangle(window.innerWidth - 60, window.innerHeight / 2, 60, window.innerHeight / 2, { isStatic: true, restitution: 0 });
+const leftGoal  = Bodies.rectangle(   -w / 2, h / 2, w, h / 3, { isStatic: true, restitution: 0 });
+const rightGoal = Bodies.rectangle(3 * w / 2, h / 2, w, h / 3, { isStatic: true, restitution: 0 });
+
+let puck = Bodies.circle(w / 2, h / 2, 40, {restitution: 1});
+
+const scoreBoard = {left: 0, right: 0};
 
 // Detect collisions
 Events.on(engine, 'collisionStart', function(event) {
@@ -40,16 +50,29 @@ Events.on(engine, 'collisionStart', function(event) {
 
   for (let i = 0; i < pairs.length; i++) {
     const pair = pairs[i];
-    if(pair.id === Matter.Pair.id(puck, leftGoal) || pair.id === Matter.Pair.id(puck, rightGoal)) {
-      console.log('goal!');
-      // nollställ pucken
-      // hantera scoreboard
+    if(pair.id === Matter.Pair.id(puck, leftGoal)) {
+      // Reset puck
+      Body.setSpeed(puck, 0);
+      Body.setVelocity(puck, Vector.create(0, 0));
+      Body.setPosition(puck, Vector.create(400, h / 2));
+      
+      // Update scoreboard
+      scoreBoard.right += 1;
+    }
+    else if(pair.id === Matter.Pair.id(puck, rightGoal)) {
+      // Reset puck
+      Body.setSpeed(puck, 0);
+      Body.setVelocity(puck, Vector.create(0, 0));
+      Body.setPosition(puck, Vector.create(w - 400, h / 2));
+      
+      // Update scoreboard
+      scoreBoard.left += 1;
     }
   }
 });
 
 // Add all of the bodies to the world
-Composite.add(engine.world, [puck, leftWall, rightWall, topWall, bottomWall, leftGoal, rightGoal]);
+Composite.add(engine.world, [puck, leftTopHalfWall, leftBottomHalfWall, rightTopHalfWall, rightBottomHalfWall, topWall, bottomWall, leftGoal, rightGoal]);
 
 // Run the renderer
 Render.run(render);
