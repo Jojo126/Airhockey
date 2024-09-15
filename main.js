@@ -26,8 +26,8 @@ const rightTopHalfWall    = Bodies.rectangle(3 * w / 2 - inset,             h / 
 const leftBottomHalfWall  = Bodies.rectangle(   -w / 2 + inset, 2 * h / 3 + h / 6, w, h / 3, { isStatic: true, restitution: 1 });
 const rightBottomHalfWall = Bodies.rectangle(3 * w / 2 - inset, 2 * h / 3 + h / 6, w, h / 3, { isStatic: true, restitution: 1 });
 
-const topWall     = Bodies.rectangle(w / 2,    -h / 2 + inset, w, h, { isStatic: true, restitution: 1 });
-const bottomWall  = Bodies.rectangle(w / 2, 3 * h / 2 - inset, w, h, { isStatic: true, restitution: 1 });
+const topWall     = Bodies.rectangle(w / 2,    -h / 2 + inset, 3 * w, h, { isStatic: true, restitution: 1 });
+const bottomWall  = Bodies.rectangle(w / 2, 3 * h / 2 - inset, 3 * w, h, { isStatic: true, restitution: 1 });
 
 // Goals
 const leftGoal  = Bodies.rectangle(   -w / 2 - puckRadius * 3, h / 2, w, h / 3, { isStatic: true, restitution: 0 });
