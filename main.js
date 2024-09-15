@@ -2,7 +2,8 @@ import Matter, { Body, Vector, World } from "matter-js";
 
 const w = window.innerWidth;
 const h = window.innerHeight;
-const inset = 30;
+const inset = 0;
+const puckRadius = 40;
 
 // Module aliases
 const Engine = Matter.Engine,
@@ -17,15 +18,7 @@ const Engine = Matter.Engine,
 const engine = Engine.create();
 engine.gravity.y = 0;
 
-// Create a renderer
-const render = Render.create({
-  element: document.body,
-  engine: engine,
-  options: {
-    width: w,
-    height: h
-  }
-});
+
 
 // Create walls (bounds)
 const leftTopHalfWall     = Bodies.rectangle(   -w / 2 + inset,             h / 6, w, h / 3, { isStatic: true, restitution: 1 });
@@ -37,12 +30,18 @@ const topWall     = Bodies.rectangle(w / 2,    -h / 2 + inset, w, h, { isStatic:
 const bottomWall  = Bodies.rectangle(w / 2, 3 * h / 2 - inset, w, h, { isStatic: true, restitution: 1 });
 
 // Goals
-const leftGoal  = Bodies.rectangle(   -w / 2, h / 2, w, h / 3, { isStatic: true, restitution: 0 });
-const rightGoal = Bodies.rectangle(3 * w / 2, h / 2, w, h / 3, { isStatic: true, restitution: 0 });
+const leftGoal  = Bodies.rectangle(   -w / 2 - puckRadius * 3, h / 2, w, h / 3, { isStatic: true, restitution: 0 });
+const rightGoal = Bodies.rectangle(3 * w / 2 + puckRadius * 3, h / 2, w, h / 3, { isStatic: true, restitution: 0 });
 
-let puck = Bodies.circle(w / 2, h / 2, 40, {restitution: 1});
+let puck = Bodies.circle(w / 2, h / 2, 40, {restitution: 1, frictionAir: 0.005});
 
 const scoreBoard = {left: 0, right: 0};
+
+const canvas = document.getElementById('canvas');
+canvas.width = w;
+canvas.height = h;
+canvas.style.width = w;
+canvas.style.height = h;
 
 // Detect collisions
 Events.on(engine, 'collisionStart', function(event) {
@@ -72,10 +71,37 @@ Events.on(engine, 'collisionStart', function(event) {
 });
 
 // Add all of the bodies to the world
-Composite.add(engine.world, [puck, leftTopHalfWall, leftBottomHalfWall, rightTopHalfWall, rightBottomHalfWall, topWall, bottomWall, leftGoal, rightGoal]);
+Composite.add(engine.world, [
+  puck, 
+  leftTopHalfWall, 
+  leftBottomHalfWall, 
+  rightTopHalfWall, 
+  rightBottomHalfWall, 
+  topWall, 
+  bottomWall, 
+  leftGoal, 
+  rightGoal
+]);
 
-// Run the renderer
-Render.run(render);
+
+// Create a renderer
+/*const render = Render.create({
+  element: document.body,
+  engine: engine,
+  options: {
+    width: w,
+    height: h
+  }
+});
+// Run the debug renderer
+Render.run(render);*/
+
+// Render loop
+requestAnimationFrame(function update() {
+  canvas.getContext('2d').clearRect(0, 0, w, h);
+  draw();
+  requestAnimationFrame(update);
+});
 
 // Create runner
 const runner = Runner.create();
@@ -83,8 +109,79 @@ const runner = Runner.create();
 // Run the engine
 Runner.run(runner, engine);
 
+function isFlickering() {
+  const startFlickering = Math.random() < 0.01;
+  const isFlickering = Math.floor(Date.now() / 100) % 2 === 0;
+  return startFlickering && isFlickering;
+}
+function draw() {
+  const ctx = canvas.getContext("2d");
 
+  ctx.font = `${h}px 'Rajdhani'`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'hanging';
 
+  ctx.fillStyle = 'rgba(0, 0, 0, .4)';
+  ctx.lineWidth = 4;
+  ctx.shadowBlur = 100;
+
+  // Left score
+  ctx.strokeStyle = 'rgba(18, 62, 123, 0.6)';
+  ctx.shadowColor = 'rgba(18, 62, 123, 1)';
+  if(!isFlickering()) {
+    ctx.strokeText(scoreBoard.left, w / 4, h / 2 - h * .9 / 2);
+    ctx.fillText(scoreBoard.left, w / 4, h / 2 - h * .9 / 2);
+  }
+  // Right score
+  ctx.strokeStyle = 'rgba(113, 28, 145, 0.6)';
+  ctx.shadowColor = 'rgba(113, 28, 145, 1)';
+  if(!isFlickering()) {
+    ctx.strokeText(scoreBoard.right, 3 * w / 4, h / 2 - h * .9 / 2);
+    ctx.fillText(scoreBoard.right, 3 * w / 4, h / 2 - h * .9 / 2);
+  }
+
+  // Halfway line
+  ctx.strokeStyle = 'rgba(234, 1, 217, 0.6)';
+  ctx.shadowColor = 'rgba(234, 1, 217, 1)';
+  ctx.beginPath();
+  ctx.moveTo(w / 2, 0);
+  ctx.lineTo(w / 2, h / 2 - h / 8);
+  ctx.moveTo(w / 2 + h / 8, h / 2);
+  ctx.arc(w / 2, h / 2, h / 8, 0, 2 * Math.PI);
+  ctx.moveTo(w / 2, h / 2 + h / 8);
+  ctx.lineTo(w / 2, h);
+  ctx.closePath();
+  if(!isFlickering()) {
+    ctx.stroke();
+    ctx.fill();
+  }
+
+  // Bounds
+  ctx.beginPath();
+  ctx.moveTo(0, h / 3);
+  ctx.lineTo(0, 0);
+  ctx.lineTo(w, 0);
+  ctx.lineTo(w, h / 3);
+  ctx.moveTo(w, 2 * h / 3);
+  ctx.lineTo(w, h);
+  ctx.lineTo(0, h);
+  ctx.lineTo(0, 2 * h / 3);
+  if(!isFlickering()) {
+    ctx.stroke();
+  }
+  ctx.closePath();
+
+  // Puck
+  ctx.strokeStyle = 'rgba(11, 189, 199, 0.5)';
+  ctx.shadowColor = 'rgba(11, 189, 199, 1)';
+  ctx.fillStyle = 'rgba(11, 189, 199, 0.1)';
+  ctx.beginPath();
+  ctx.arc(puck.position.x, puck.position.y, puckRadius, 0, 2 * Math.PI);
+  ctx.stroke();
+  ctx.fill();
+  ctx.closePath();
+
+}
 
 // Multitouch event listeners/handlers
 const evCacheSvg = new Array();
