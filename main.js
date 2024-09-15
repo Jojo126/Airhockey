@@ -133,15 +133,15 @@ function draw() {
   ctx.shadowBlur = 100;
 
   // Left score
-  ctx.strokeStyle = 'rgba(18, 62, 123, 0.6)';
-  ctx.shadowColor = 'rgba(18, 62, 123, 1)';
+  ctx.strokeStyle = 'rgba(1, 206, 194, 0.6)';
+  ctx.shadowColor = 'rgba(1, 206, 194, 1)';
   if(!isFlickering()) {
     ctx.strokeText(scoreBoard.left, w / 4, h / 2 - h * .9 / 2);
     ctx.fillText(scoreBoard.left, w / 4, h / 2 - h * .9 / 2);
   }
   // Right score
-  ctx.strokeStyle = 'rgba(113, 28, 145, 0.6)';
-  ctx.shadowColor = 'rgba(113, 28, 145, 1)';
+  ctx.strokeStyle = 'rgba(252, 63, 121, 0.6)';
+  ctx.shadowColor = 'rgba(252, 63, 121, 1)';
   if(!isFlickering()) {
     ctx.strokeText(scoreBoard.right, 3 * w / 4, h / 2 - h * .9 / 2);
     ctx.fillText(scoreBoard.right, 3 * w / 4, h / 2 - h * .9 / 2);
@@ -149,8 +149,8 @@ function draw() {
 
   const arenaIsFlickering = isFlickering();
   // Halfway line
-  ctx.strokeStyle = 'rgba(234, 1, 217, 0.6)';
-  ctx.shadowColor = 'rgba(234, 1, 217, 0.7)';
+  ctx.strokeStyle = 'rgba(242, 255, 2, 0.6)';
+  ctx.shadowColor = 'rgba(242, 255, 2, 0.5)';
   ctx.beginPath();
   ctx.moveTo(w / 2, 0);
   ctx.lineTo(w / 2, h / 2 - h / 8);
@@ -180,9 +180,9 @@ function draw() {
   ctx.closePath();
 
   // Puck
-  ctx.strokeStyle = 'rgba(11, 189, 199, 0.5)';
-  ctx.shadowColor = 'rgba(11, 189, 199, 1)';
-  ctx.fillStyle = 'rgba(11, 189, 199, 0.1)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+  ctx.shadowColor = 'rgba(255, 255, 255, 1)';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
   ctx.beginPath();
   ctx.arc(puck.position.x, puck.position.y, puckRadius, 0, 2 * Math.PI);
   ctx.stroke();
@@ -195,13 +195,13 @@ function draw() {
     ctx.arc(evCacheSvg[i].obj.position.x, evCacheSvg[i].obj.position.y, 80, 0, 2 * Math.PI);
     ctx.closePath();
     if(evCacheSvg[i].obj.position.x < w / 2) {
-      ctx.strokeStyle = 'rgba(18, 62, 123, 0.6)';
-      ctx.shadowColor = 'rgba(18, 62, 123, 1)';
-      ctx.fillStyle = 'rgba(18, 62, 123, 0.1)';
+      ctx.strokeStyle = 'rgba(1, 206, 194, 0.6)';
+      ctx.shadowColor = 'rgba(1, 206, 194, 1)';
+      ctx.fillStyle = 'rgba(1, 206, 194, 0.1)';
     } else {
-      ctx.strokeStyle = 'rgba(113, 28, 145, 0.6)';
-      ctx.shadowColor = 'rgba(113, 28, 145, 1)';
-      ctx.fillStyle = 'rgba(113, 28, 145, 0.1)';
+      ctx.strokeStyle = 'rgba(252, 63, 121, 0.6)';
+      ctx.shadowColor = 'rgba(252, 63, 121, 1)';
+      ctx.fillStyle = 'rgba(252, 63, 121, 0.1)';
     }
     ctx.stroke();
     ctx.fill();
