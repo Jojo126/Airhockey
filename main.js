@@ -33,7 +33,8 @@ const bottomWall  = Bodies.rectangle(w / 2, 3 * h / 2 - inset, w, h, { isStatic:
 const leftGoal  = Bodies.rectangle(   -w / 2 - puckRadius * 3, h / 2, w, h / 3, { isStatic: true, restitution: 0 });
 const rightGoal = Bodies.rectangle(3 * w / 2 + puckRadius * 3, h / 2, w, h / 3, { isStatic: true, restitution: 0 });
 
-let puck = Bodies.circle(w / 2, h / 2, 40, {restitution: 1, frictionAir: 0.005});
+// Puck
+let puck = Bodies.circle(Math.round(Math.random()) === 1 ? w / 4 : 3 * w / 4, h / 2, 40, {restitution: 1, frictionAir: 0.005});
 
 const scoreBoard = {left: 0, right: 0};
 
@@ -53,7 +54,7 @@ Events.on(engine, 'collisionStart', function(event) {
       // Reset puck
       Body.setSpeed(puck, 0);
       Body.setVelocity(puck, Vector.create(0, 0));
-      Body.setPosition(puck, Vector.create(400, h / 2));
+      Body.setPosition(puck, Vector.create(w / 4, h / 2));
       
       // Update scoreboard
       scoreBoard.right += 1;
@@ -62,10 +63,16 @@ Events.on(engine, 'collisionStart', function(event) {
       // Reset puck
       Body.setSpeed(puck, 0);
       Body.setVelocity(puck, Vector.create(0, 0));
-      Body.setPosition(puck, Vector.create(w - 400, h / 2));
+      Body.setPosition(puck, Vector.create(3 * w / 4, h / 2));
       
       // Update scoreboard
       scoreBoard.left += 1;
+    }
+
+    // Match point
+    if(scoreBoard.left >= 7 || scoreBoard.right >= 7) {
+      scoreBoard.left = 0;
+      scoreBoard.right = 0;
     }
   }
 });
@@ -121,7 +128,7 @@ function draw() {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'hanging';
 
-  ctx.fillStyle = 'rgba(0, 0, 0, .4)';
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
   ctx.lineWidth = 4;
   ctx.shadowBlur = 100;
 
@@ -140,9 +147,10 @@ function draw() {
     ctx.fillText(scoreBoard.right, 3 * w / 4, h / 2 - h * .9 / 2);
   }
 
+  const arenaIsFlickering = isFlickering();
   // Halfway line
   ctx.strokeStyle = 'rgba(234, 1, 217, 0.6)';
-  ctx.shadowColor = 'rgba(234, 1, 217, 1)';
+  ctx.shadowColor = 'rgba(234, 1, 217, 0.7)';
   ctx.beginPath();
   ctx.moveTo(w / 2, 0);
   ctx.lineTo(w / 2, h / 2 - h / 8);
@@ -151,7 +159,7 @@ function draw() {
   ctx.moveTo(w / 2, h / 2 + h / 8);
   ctx.lineTo(w / 2, h);
   ctx.closePath();
-  if(!isFlickering()) {
+  if(!arenaIsFlickering) {
     ctx.stroke();
     ctx.fill();
   }
@@ -166,7 +174,7 @@ function draw() {
   ctx.lineTo(w, h);
   ctx.lineTo(0, h);
   ctx.lineTo(0, 2 * h / 3);
-  if(!isFlickering()) {
+  if(!arenaIsFlickering) {
     ctx.stroke();
   }
   ctx.closePath();
@@ -181,20 +189,30 @@ function draw() {
   ctx.fill();
   ctx.closePath();
 
+  // Pushers
+  for (let i = 0; i < evCacheSvg.length; i++) {
+    ctx.beginPath();
+    ctx.arc(evCacheSvg[i].obj.position.x, evCacheSvg[i].obj.position.y, 80, 0, 2 * Math.PI);
+    ctx.closePath();
+    if(evCacheSvg[i].obj.position.x < w / 2) {
+      ctx.strokeStyle = 'rgba(18, 62, 123, 0.6)';
+      ctx.shadowColor = 'rgba(18, 62, 123, 1)';
+      ctx.fillStyle = 'rgba(18, 62, 123, 0.1)';
+    } else {
+      ctx.strokeStyle = 'rgba(113, 28, 145, 0.6)';
+      ctx.shadowColor = 'rgba(113, 28, 145, 1)';
+      ctx.fillStyle = 'rgba(113, 28, 145, 0.1)';
+    }
+    ctx.stroke();
+    ctx.fill();
+  }
 }
 
 // Multitouch event listeners/handlers
 const evCacheSvg = new Array();
 
 function pointerdown_handler(ev) {
-  //console.log('point down', ev.offsetX, ev.offsetY)
-
-  // lägg till en matter-body med contraint som rör sig med event positionen
-
-  //let pusher = new Pusher(ev.offsetX, ev.offsetY);
-  //svg.appendChild(pusher.svg);
-
-  let pusher = Bodies.circle(ev.offsetX, ev.offsetY, 40, {restitution: 1});
+  let pusher = Bodies.circle(ev.offsetX, ev.offsetY, 80, {restitution: 1});
   let touchPoint = Bodies.circle(ev.offsetX, ev.offsetY, 1, {isStatic: true});
   touchPoint.collisionFilter.group = -1;
   touchPoint.collisionFilter.category = 2;
@@ -217,17 +235,14 @@ function pointerdown_handler(ev) {
 }
 
 function pointermove_handler(ev) {
-  //console.log('move');
   // Note: if the user makes more than one "simultaneous" touch, most browsers 
   // fire at least one pointermove event and some will fire several pointermoves.
-  //
+
   // This function sets the target element's border to "dashed" to visually
   // indicate the target received a move event.
 
-  //console.log(ev.offsetX, ev.offsetY/*, ev.movementX, ev.movementY*/);
   for (let i = 0; i < evCacheSvg.length; i++) {
     if (evCacheSvg[i].event.pointerId == ev.pointerId) {
-      //console.log(i, ev.offsetX, ev.offsetY, evCacheSvg[i].obj);
       Matter.Body.setPosition(evCacheSvg[i].obj, Vector.create(ev.offsetX, ev.offsetY));
       break;
     }
@@ -235,18 +250,15 @@ function pointermove_handler(ev) {
 }
 
 function pointerup_handler(ev) {
-  //console.log('point up')
   // Remove this touch point from the cache and reset the target's
   // background and border
   remove_event(ev);
 }
 
 function remove_event(ev) {
-  //console.log('remove')
   // Remove this event from the target's cache
   for (let i = 0; i < evCacheSvg.length; i++) {
     if (evCacheSvg[i].event.pointerId == ev.pointerId) {
-      //evCacheSvg[i].obj.svg.remove();
       Composite.remove(engine.world, evCacheSvg[i].obj);
       Composite.remove(engine.world, evCacheSvg[i].pusher);
       Composite.remove(engine.world, evCacheSvg[i].constraint);
@@ -259,7 +271,6 @@ function remove_event(ev) {
 function set_handlers() {
   // Install event handlers for the given element
   const el = document.querySelector('canvas');
-  //console.log(el)
 
   el.onpointerdown = pointerdown_handler;
   el.onpointermove = pointermove_handler;
@@ -270,8 +281,6 @@ function set_handlers() {
   el.onpointercancel = pointerup_handler;
   el.onpointerout = pointerup_handler;
   el.onpointerleave = pointerup_handler;
-  
- //console.log('set handlers')
 }
 
 // Set multitouch eventhandlers
