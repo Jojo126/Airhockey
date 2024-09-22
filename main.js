@@ -1,4 +1,5 @@
 import Matter, { Body, Vector, World } from "matter-js";
+import { fireworks } from "@tsparticles/fireworks";
 
 const w = window.innerWidth;
 const h = window.innerHeight;
@@ -56,6 +57,43 @@ const limitMaxSpeed = (event) => {
 }
 Matter.Events.on(engine, 'beforeUpdate', limitMaxSpeed)
 
+const newGame = (winner, container) => {
+  container.stop();
+
+  // Reset puck
+  Body.setSpeed(puck, 0);
+  Body.setVelocity(puck, Vector.create(0, 0));
+  if(winner === 'left') 
+    Body.setPosition(puck, Vector.create(3 * w / 4, h / 2));
+  else
+    Body.setPosition(puck, Vector.create(w / 4, h / 2));
+  
+  // Update scoreboard
+  scoreBoard.left = 0;
+  scoreBoard.right = 0;
+};
+
+const celebrateWinner = (winner) => {
+  fireworks({
+    colors: ["#01CEC2", "#FC3F79", "#F2FF02", "#FFFFFF", "#252626"],
+    minHeight: {
+      max: 0,
+      min: 60
+    }
+  }).then((container) => {
+    if( container?._container?.canvas?.element.style) {
+      if(winner === 'left')
+        container._container.canvas.element.style = 'transform: rotate(90deg) translateY(50%)';
+      else
+        container._container.canvas.element.style = 'transform: rotate(-90deg) translateY(50%)';
+    }
+
+    document.body.addEventListener("click", () => {
+      newGame(winner, container);
+    }, {once: true});
+  });
+};
+
 // Detect collisions
 Events.on(engine, 'collisionStart', function(event) {
   const pairs = event.pairs;
@@ -82,9 +120,15 @@ Events.on(engine, 'collisionStart', function(event) {
     }
 
     // Match point
-    if(scoreBoard.left >= 7 || scoreBoard.right >= 7) {
+    if(scoreBoard.left >= 7) {
       scoreBoard.left = 0;
       scoreBoard.right = 0;
+      celebrateWinner('left');
+    }
+    if(scoreBoard.right >= 7) {
+      scoreBoard.left = 0;
+      scoreBoard.right = 0;
+      celebrateWinner('right');
     }
   }
 });

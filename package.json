@@ -5,6 +5,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tsparticles/engine": "^3.5.0",
+    "@tsparticles/fireworks": "^3.5.0",
     "matter-js": "^0.20.0"
   },
   "devDependencies": {
