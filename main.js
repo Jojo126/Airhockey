@@ -136,87 +136,151 @@ function isFlickering() {
 function draw() {
   const ctx = canvas.getContext("2d");
 
-  ctx.font = `${h}px 'Rajdhani'`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'hanging';
-
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-  ctx.lineWidth = 4;
-  ctx.shadowBlur = 100;
-
-  // Left score
-  ctx.strokeStyle = 'rgba(1, 206, 194, 0.6)';
-  ctx.shadowColor = 'rgba(1, 206, 194, 1)';
-  if(!isFlickering()) {
-    ctx.strokeText(scoreBoard.left, w / 4, h / 2 - h * .9 / 2);
-    ctx.fillText(scoreBoard.left, w / 4, h / 2 - h * .9 / 2);
-  }
-  // Right score
-  ctx.strokeStyle = 'rgba(252, 63, 121, 0.6)';
-  ctx.shadowColor = 'rgba(252, 63, 121, 1)';
-  if(!isFlickering()) {
-    ctx.strokeText(scoreBoard.right, 3 * w / 4, h / 2 - h * .9 / 2);
-    ctx.fillText(scoreBoard.right, 3 * w / 4, h / 2 - h * .9 / 2);
-  }
-
   const arenaIsFlickering = isFlickering();
-  // Halfway line
-  ctx.strokeStyle = 'rgba(242, 255, 2, 0.6)';
-  ctx.shadowColor = 'rgba(242, 255, 2, 0.5)';
-  ctx.beginPath();
-  ctx.moveTo(w / 2, 0);
-  ctx.lineTo(w / 2, h / 2 - h / 8);
-  ctx.moveTo(w / 2 + h / 8, h / 2);
-  ctx.arc(w / 2, h / 2, h / 8, 0, 2 * Math.PI);
-  ctx.moveTo(w / 2, h / 2 + h / 8);
-  ctx.lineTo(w / 2, h);
-  ctx.closePath();
   if(!arenaIsFlickering) {
-    ctx.stroke();
+    const glowDecay = 150;
+    const arenaColor = 'rgba(242, 255, 2, 0.051)';
+
+    ctx.strokeStyle = 'rgba(242, 255, 2, 0.4)';
+    ctx.lineWidth = 4;
+    ctx.shadowColor = 'transparent';
+
+    // Bounds
+    const rect = new Path2D();
+    rect.rect(0, 0, w, h);
+    ctx.stroke(rect);
+
+    const topGradient = ctx.createLinearGradient(0, 0, 0, glowDecay);
+    topGradient.addColorStop(0, arenaColor);
+    topGradient.addColorStop(1, 'transparent');
+    ctx.fillStyle = topGradient;
+    ctx.fillRect(0, 0, w, glowDecay);
+    const leftGradient = ctx.createLinearGradient(0, 0, glowDecay, 0);
+    leftGradient.addColorStop(0, arenaColor);
+    leftGradient.addColorStop(1, 'transparent');
+    ctx.fillStyle = leftGradient;
+    ctx.fillRect(0, 0, glowDecay, h);
+    const bottomGradient = ctx.createLinearGradient(0, h, 0, h - glowDecay);
+    bottomGradient.addColorStop(0, arenaColor);
+    bottomGradient.addColorStop(1, 'transparent');
+    ctx.fillStyle = bottomGradient;
+    ctx.fillRect(0, h - glowDecay, w, h);
+    const rightGradient = ctx.createLinearGradient(w - glowDecay, 0, w, 0);
+    rightGradient.addColorStop(0, 'transparent');
+    rightGradient.addColorStop(1, arenaColor);
+    ctx.fillStyle = rightGradient;
+    ctx.fillRect(w - glowDecay, 0, w, h);
+
+    // Goals mask
+    ctx.fillStyle = '#0f0f0f';
+    ctx.fillRect(0, h / 3, w, h / 3);
+
+    // Middle line
+    const middleLine = new Path2D();
+    middleLine.moveTo(w / 2, 0);
+    middleLine.lineTo(w / 2, h);
+    ctx.stroke(middleLine);
+    const midLinGradient = ctx.createLinearGradient(w / 2 - glowDecay, 0, w / 2 + glowDecay, 0);
+    midLinGradient.addColorStop(0, 'transparent');
+    midLinGradient.addColorStop(.5, arenaColor);
+    midLinGradient.addColorStop(1, 'transparent');
+    ctx.fillStyle = midLinGradient;
+    ctx.fillRect(0, 0, w, h);
+
+    // Middle circle
+    const middleCircle = new Path2D();
+    middleCircle.arc(w / 2, h / 2, h / 8, 0, 2 * Math.PI);
+    ctx.fillStyle = '#0f0f0f';
+    ctx.fill(middleCircle);
+    ctx.stroke(middleCircle);
+    const midCircleGradient = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, h / 8 * 2);
+    midCircleGradient.addColorStop(.1, 'transparent');
+    midCircleGradient.addColorStop(.5 , arenaColor);
+    midCircleGradient.addColorStop(.8, 'transparent');
+    ctx.fillStyle = midCircleGradient;
+    ctx.beginPath();
+    ctx.arc(w / 2, h / 2, 2 * h / 8, 0, 2 * Math.PI);
     ctx.fill();
+    ctx.closePath();
   }
 
-  // Bounds
-  ctx.beginPath();
-  ctx.moveTo(0, h / 3);
-  ctx.lineTo(0, 0);
-  ctx.lineTo(w, 0);
-  ctx.lineTo(w, h / 3);
-  ctx.moveTo(w, 2 * h / 3);
-  ctx.lineTo(w, h);
-  ctx.lineTo(0, h);
-  ctx.lineTo(0, 2 * h / 3);
-  if(!arenaIsFlickering) {
-    ctx.stroke();
+  // Scores
+  {
+    ctx.font = `${h}px 'Rajdhani'`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'hanging';
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.lineWidth = 4;
+    ctx.shadowBlur = 100;
+
+    // Left score
+    ctx.strokeStyle = 'rgba(1, 206, 194, 0.6)';
+    ctx.shadowColor = 'rgba(1, 206, 194, 1)';
+    if(!isFlickering()) {
+      ctx.strokeText(scoreBoard.left, w / 4, h / 2 - h * .9 / 2);
+      ctx.fillText(scoreBoard.left, w / 4, h / 2 - h * .9 / 2);
+    }
+    // Right score
+    ctx.strokeStyle = 'rgba(252, 63, 121, 0.6)';
+    ctx.shadowColor = 'rgba(252, 63, 121, 1)';
+    if(!isFlickering()) {
+      ctx.strokeText(scoreBoard.right, 3 * w / 4, h / 2 - h * .9 / 2);
+      ctx.fillText(scoreBoard.right, 3 * w / 4, h / 2 - h * .9 / 2);
+    }
   }
-  ctx.closePath();
 
   // Puck
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-  ctx.shadowColor = 'rgba(255, 255, 255, 1)';
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-  ctx.beginPath();
-  ctx.arc(puck.position.x, puck.position.y, puckRadius, 0, 2 * Math.PI);
-  ctx.stroke();
-  ctx.fill();
-  ctx.closePath();
+  {
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(puck.position.x, puck.position.y, puckRadius, 0, 2 * Math.PI);
+    ctx.closePath();
+    ctx.stroke();
+
+    const puckGradient = ctx.createRadialGradient(puck.position.x, puck.position.y, 0, puck.position.x, puck.position.y, puckRadius * 1.5);
+    puckGradient.addColorStop(0, 'rgba(255, 255, 255, .0)');
+    puckGradient.addColorStop(.6, 'rgba(255, 255, 255, .1)');
+    puckGradient.addColorStop(.7, 'rgba(255, 255, 255, .3)');
+    puckGradient.addColorStop(.8, 'rgba(255, 255, 255, .1)');
+    puckGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = puckGradient;
+    ctx.beginPath();
+    ctx.arc(puck.position.x, puck.position.y, puckRadius * 2, 0, 2 * Math.PI);
+    ctx.closePath();
+    ctx.fill();
+  }
 
   // Pushers
   for (let i = 0; i < evCacheSvg.length; i++) {
-    ctx.beginPath();
-    ctx.arc(evCacheSvg[i].obj.position.x, evCacheSvg[i].obj.position.y, 80, 0, 2 * Math.PI);
-    ctx.closePath();
-    if(evCacheSvg[i].obj.position.x < w / 2) {
-      ctx.strokeStyle = 'rgba(1, 206, 194, 0.6)';
-      ctx.shadowColor = 'rgba(1, 206, 194, 1)';
-      ctx.fillStyle = 'rgba(1, 206, 194, 0.1)';
-    } else {
-      ctx.strokeStyle = 'rgba(252, 63, 121, 0.6)';
-      ctx.shadowColor = 'rgba(252, 63, 121, 1)';
-      ctx.fillStyle = 'rgba(252, 63, 121, 0.1)';
+
+    const drawPusher = (r, g, b) => {
+      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, .6)`;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(evCacheSvg[i].obj.position.x, evCacheSvg[i].obj.position.y, 80, 0, 2 * Math.PI);
+      ctx.closePath();
+      ctx.stroke();
+
+      const puckGradient = ctx.createRadialGradient(evCacheSvg[i].obj.position.x, evCacheSvg[i].obj.position.y, 0, evCacheSvg[i].obj.position.x, evCacheSvg[i].obj.position.y, 80 * 1.5);
+      puckGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0)`);
+      puckGradient.addColorStop(.6, `rgba(${r}, ${g}, ${b}, .1)`);
+      puckGradient.addColorStop(.7, `rgba(${r}, ${g}, ${b}, .3)`);
+      puckGradient.addColorStop(.8, `rgba(${r}, ${g}, ${b}, .1)`);
+      puckGradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+      ctx.fillStyle = puckGradient;
+      ctx.beginPath();
+      ctx.arc(evCacheSvg[i].obj.position.x, evCacheSvg[i].obj.position.y, 80 * 1.5, 0, 2 * Math.PI);
+      ctx.closePath();
+      ctx.fill();
     }
-    ctx.stroke();
-    ctx.fill();
+
+    if(evCacheSvg[i].obj.position.x < w / 2) {
+      drawPusher(1, 206, 194);
+    } else {
+      drawPusher(252, 63, 121);
+    }
   }
 }
 
