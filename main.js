@@ -44,6 +44,18 @@ canvas.height = h;
 canvas.style.width = w;
 canvas.style.height = h;
 
+// Limit puck max speed
+const limitMaxSpeed = (event) => {
+  event.source.world.bodies.forEach((body) => {
+    let maxSpeed = 50
+    Matter.Body.setVelocity(body, {
+      x: Math.min(maxSpeed, Math.max(-maxSpeed, body.velocity.x)),
+      y: Math.min(maxSpeed, Math.max(-maxSpeed, body.velocity.y)),
+    })
+  })
+}
+Matter.Events.on(engine, 'beforeUpdate', limitMaxSpeed)
+
 // Detect collisions
 Events.on(engine, 'collisionStart', function(event) {
   const pairs = event.pairs;
