@@ -37,7 +37,6 @@ const rightGoal = Bodies.rectangle(3 * w / 2 + puckRadius * 3, h / 2, w, h / 3, 
 let puck = Bodies.circle(Math.round(Math.random()) === 1 ? w / 4 : 3 * w / 4, h / 2, 40, {restitution: 1, frictionAir: 0.005});
 
 const scoreBoard = {left: 0, right: 0};
-const gamePoints = {left: 0, right: 0};
 
 const canvas = document.getElementById('canvas');
 canvas.width = w;
@@ -83,24 +82,9 @@ Events.on(engine, 'collisionStart', function(event) {
     }
 
     // Match point
-    if(scoreBoard.left >= 7) {
+    if(scoreBoard.left >= 7 || scoreBoard.right >= 7) {
       scoreBoard.left = 0;
       scoreBoard.right = 0;
-      gamePoints.left += 1;
-    }
-    else if(scoreBoard.right >= 7) {
-      scoreBoard.left = 0;
-      scoreBoard.right = 0;
-      gamePoints.right += 1;
-    }
-
-    if(gamePoints.left >= 4) {
-      gamePoints.left = 0;
-      gamePoints.right = 0;
-    }
-    else if(gamePoints.right >= 4) {
-      gamePoints.left = 0;
-      gamePoints.right = 0;
     }
   }
 });
@@ -144,12 +128,12 @@ const runner = Runner.create();
 // Run the engine
 Runner.run(runner, engine);
 
+function isFlickering() {
+  const startFlickering = Math.random() < 0.01;
+  const isFlickering = Math.floor(Date.now() / 100) % 2 === 0;
+  return startFlickering && isFlickering;
+}
 function draw() {
-  function isFlickering() {
-    const startFlickering = Math.random() < 0.01;
-    const isFlickering = Math.floor(Date.now() / 100) % 2 === 0;
-    return startFlickering && isFlickering;
-  }
   const ctx = canvas.getContext("2d");
 
   const arenaIsFlickering = isFlickering();
@@ -229,61 +213,20 @@ function draw() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
     ctx.lineWidth = 4;
     ctx.shadowBlur = 100;
-    const scoreYoffset = h * 0.05;
-    const pointsMargin = 40;
-    const pointsRadius = 8;
-    const yPosition = 27 * h / 32;
 
     // Left score
     ctx.strokeStyle = 'rgba(1, 206, 194, 0.6)';
     ctx.shadowColor = 'rgba(1, 206, 194, 1)';
     if(!isFlickering()) {
-      ctx.strokeText(scoreBoard.left, w / 4, scoreYoffset);
-      ctx.fillText(scoreBoard.left, w / 4, scoreYoffset);
-
-      // Game points
-      for(let i = 0; i < gamePoints.left; i++) {
-        ctx.strokeStyle = 'rgba(1, 206, 194, 0.6)';
-        ctx.shadowBlur = 50;
-        ctx.shadowColor = 'rgba(1, 206, 194, 1)';
-        ctx.beginPath();
-        ctx.arc(w / 4 - (4 - 1) / 2 * pointsMargin + i * pointsMargin, yPosition, pointsRadius, 0, 2 * Math.PI);
-        ctx.stroke();
-        ctx.fill();
-      }
-      for(let i = gamePoints.left; i < 4; i++) {
-        ctx.strokeStyle = 'rgba(1, 206, 194, 0.2)';
-        ctx.shadowColor = 'transparent';
-        ctx.beginPath();
-        ctx.arc(w / 4 - (4 - 1) / 2 * pointsMargin + i * pointsMargin, yPosition, pointsRadius, 0, 2 * Math.PI);
-        ctx.stroke();
-      }
+      ctx.strokeText(scoreBoard.left, w / 4, h / 2 - h * .9 / 2);
+      ctx.fillText(scoreBoard.left, w / 4, h / 2 - h * .9 / 2);
     }
     // Right score
     ctx.strokeStyle = 'rgba(252, 63, 121, 0.6)';
     ctx.shadowColor = 'rgba(252, 63, 121, 1)';
     if(!isFlickering()) {
-      ctx.strokeText(scoreBoard.right, 3 * w / 4, scoreYoffset);
-      ctx.fillText(scoreBoard.right, 3 * w / 4, scoreYoffset);
-
-      // Game points
-      for (let i = 0; i < gamePoints.right; i++) {
-        ctx.strokeStyle = 'rgba(252, 63, 121, 0.6)';
-        ctx.shadowBlur = 50;
-        ctx.shadowColor = 'rgba(252, 63, 121, 1)';
-        ctx.beginPath();
-        ctx.arc(3 * w / 4 + (4 - 1) / 2 * pointsMargin - i * pointsMargin, yPosition, pointsRadius, 0, 2 * Math.PI);
-        ctx.closePath();
-        ctx.stroke();
-        ctx.fill();
-      }
-      for(let i = gamePoints.right; i < 4; i++) {
-        ctx.strokeStyle = 'rgba(252, 63, 121, 0.2)';
-        ctx.shadowColor = 'transparent';
-        ctx.beginPath();
-        ctx.arc(3 * w / 4 + (4 - 1) / 2 * pointsMargin - i * pointsMargin, yPosition, pointsRadius, 0, 2 * Math.PI);
-        ctx.stroke();
-      }
+      ctx.strokeText(scoreBoard.right, 3 * w / 4, h / 2 - h * .9 / 2);
+      ctx.fillText(scoreBoard.right, 3 * w / 4, h / 2 - h * .9 / 2);
     }
   }
 
@@ -310,35 +253,33 @@ function draw() {
   }
 
   // Pushers
-  {
-    for (let i = 0; i < evCacheSvg.length; i++) {
+  for (let i = 0; i < evCacheSvg.length; i++) {
 
-      const drawPusher = (r, g, b) => {
-        ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, .6)`;
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.arc(evCacheSvg[i].obj.position.x, evCacheSvg[i].obj.position.y, 80, 0, 2 * Math.PI);
-        ctx.closePath();
-        ctx.stroke();
+    const drawPusher = (r, g, b) => {
+      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, .6)`;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(evCacheSvg[i].obj.position.x, evCacheSvg[i].obj.position.y, 80, 0, 2 * Math.PI);
+      ctx.closePath();
+      ctx.stroke();
 
-        const puckGradient = ctx.createRadialGradient(evCacheSvg[i].obj.position.x, evCacheSvg[i].obj.position.y, 0, evCacheSvg[i].obj.position.x, evCacheSvg[i].obj.position.y, 80 * 1.5);
-        puckGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0)`);
-        puckGradient.addColorStop(.6, `rgba(${r}, ${g}, ${b}, .1)`);
-        puckGradient.addColorStop(.7, `rgba(${r}, ${g}, ${b}, .3)`);
-        puckGradient.addColorStop(.8, `rgba(${r}, ${g}, ${b}, .1)`);
-        puckGradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
-        ctx.fillStyle = puckGradient;
-        ctx.beginPath();
-        ctx.arc(evCacheSvg[i].obj.position.x, evCacheSvg[i].obj.position.y, 80 * 1.5, 0, 2 * Math.PI);
-        ctx.closePath();
-        ctx.fill();
-      }
+      const puckGradient = ctx.createRadialGradient(evCacheSvg[i].obj.position.x, evCacheSvg[i].obj.position.y, 0, evCacheSvg[i].obj.position.x, evCacheSvg[i].obj.position.y, 80 * 1.5);
+      puckGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0)`);
+      puckGradient.addColorStop(.6, `rgba(${r}, ${g}, ${b}, .1)`);
+      puckGradient.addColorStop(.7, `rgba(${r}, ${g}, ${b}, .3)`);
+      puckGradient.addColorStop(.8, `rgba(${r}, ${g}, ${b}, .1)`);
+      puckGradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+      ctx.fillStyle = puckGradient;
+      ctx.beginPath();
+      ctx.arc(evCacheSvg[i].obj.position.x, evCacheSvg[i].obj.position.y, 80 * 1.5, 0, 2 * Math.PI);
+      ctx.closePath();
+      ctx.fill();
+    }
 
-      if(evCacheSvg[i].obj.position.x < w / 2) {
-        drawPusher(1, 206, 194);
-      } else {
-        drawPusher(252, 63, 121);
-      }
+    if(evCacheSvg[i].obj.position.x < w / 2) {
+      drawPusher(1, 206, 194);
+    } else {
+      drawPusher(252, 63, 121);
     }
   }
 }
